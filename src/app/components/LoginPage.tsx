@@ -25,18 +25,26 @@ export function LoginPage() {
   return (
     <div className="w-full flex items-center justify-center py-8">
       <div
-        className="w-full max-w-md p-5 rounded-xl"
+        className="w-full max-w-md p-6 rounded-2xl shadow-lg"
         style={{
-          backgroundColor: 'rgba(255,255,255,0.08)',
-          border: '1px solid rgba(255,255,255,0.15)',
+          backgroundColor: 'white',
+          border: '1px solid rgba(0,0,0,0.08)',
         }}
       >
-        <h1 className="text-white text-xl font-semibold mb-2">Admin Login</h1>
-        <p className="text-white/60 text-sm mb-4">Enter your Supabase admin account credentials.</p>
+        <h1 className="text-[#003087] text-2xl font-bold mb-2">
+          Admin Login
+        </h1>
 
-        <form onSubmit={onSubmit} className="space-y-3">
+        <p className="text-gray-600 text-sm mb-5">
+          Enter your admin credentials to continue.
+        </p>
+
+        <form onSubmit={onSubmit} className="space-y-4">
           <label className="block">
-            <span className="text-white/80 text-sm">Email</span>
+            <span className="text-gray-700 text-sm font-medium">
+              Email
+            </span>
+
             <input
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -44,9 +52,9 @@ export function LoginPage() {
               required
               className="mt-1 w-full rounded-lg px-3 py-2 outline-none"
               style={{
-                backgroundColor: 'rgba(0,0,0,0.25)',
-                border: '1px solid rgba(255,255,255,0.15)',
-                color: 'white',
+                backgroundColor: '#F5F5F5',
+                border: '1px solid #D1D5DB',
+                color: '#111827',
               }}
               placeholder="admin@example.com"
               autoComplete="email"
@@ -54,7 +62,10 @@ export function LoginPage() {
           </label>
 
           <label className="block">
-            <span className="text-white/80 text-sm">Password</span>
+            <span className="text-gray-700 text-sm font-medium">
+              Password
+            </span>
+
             <input
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -62,9 +73,9 @@ export function LoginPage() {
               required
               className="mt-1 w-full rounded-lg px-3 py-2 outline-none"
               style={{
-                backgroundColor: 'rgba(0,0,0,0.25)',
-                border: '1px solid rgba(255,255,255,0.15)',
-                color: 'white',
+                backgroundColor: '#F5F5F5',
+                border: '1px solid #D1D5DB',
+                color: '#111827',
               }}
               placeholder="••••••••"
               autoComplete="current-password"
@@ -74,7 +85,10 @@ export function LoginPage() {
           {error && (
             <div
               className="text-sm px-3 py-2 rounded-lg"
-              style={{ backgroundColor: 'rgba(255,107,0,0.15)', color: '#FF6B00' }}
+              style={{
+                backgroundColor: 'rgba(255,107,0,0.12)',
+                color: '#FF6B00',
+              }}
               role="alert"
             >
               {error}
