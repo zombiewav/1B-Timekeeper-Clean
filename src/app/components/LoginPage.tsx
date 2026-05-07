@@ -1,9 +1,11 @@
 import { FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../context/AuthContext';
+import { useApp } from '../context/AppContext';
 
 export function LoginPage() {
   const { signIn, loading } = useAuth();
+  const { isDark } = useApp();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
@@ -25,23 +27,40 @@ export function LoginPage() {
   return (
     <div className="w-full flex items-center justify-center py-8">
       <div
-        className="w-full max-w-md p-6 rounded-2xl shadow-lg"
+        className="w-full max-w-md p-6 rounded-2xl shadow-lg transition-colors"
         style={{
-          backgroundColor: 'white',
-          border: '1px solid rgba(0,0,0,0.08)',
+          backgroundColor: isDark ? '#102554' : 'white',
+          border: isDark
+            ? '1px solid rgba(255,255,255,0.1)'
+            : '1px solid rgba(0,0,0,0.08)',
         }}
       >
-        <h1 className="text-[#003087] text-2xl font-bold mb-2">
+        <h1
+          className="text-2xl font-bold mb-2"
+          style={{
+            color: isDark ? 'white' : '#003087',
+          }}
+        >
           Admin Login
         </h1>
 
-        <p className="text-gray-600 text-sm mb-5">
+        <p
+          className="text-sm mb-5"
+          style={{
+            color: isDark ? 'rgba(255,255,255,0.65)' : '#4B5563',
+          }}
+        >
           Enter your admin credentials to continue.
         </p>
 
         <form onSubmit={onSubmit} className="space-y-4">
           <label className="block">
-            <span className="text-gray-700 text-sm font-medium">
+            <span
+              className="text-sm font-medium"
+              style={{
+                color: isDark ? 'rgba(255,255,255,0.85)' : '#374151',
+              }}
+            >
               Email
             </span>
 
@@ -50,11 +69,15 @@ export function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               type="email"
               required
-              className="mt-1 w-full rounded-lg px-3 py-2 outline-none"
+              className="mt-1 w-full rounded-lg px-3 py-2 outline-none transition-colors"
               style={{
-                backgroundColor: '#F5F5F5',
-                border: '1px solid #D1D5DB',
-                color: '#111827',
+                backgroundColor: isDark
+                  ? 'rgba(255,255,255,0.08)'
+                  : '#F5F5F5',
+                border: isDark
+                  ? '1px solid rgba(255,255,255,0.12)'
+                  : '1px solid #D1D5DB',
+                color: isDark ? 'white' : '#111827',
               }}
               placeholder="admin@example.com"
               autoComplete="email"
@@ -62,7 +85,12 @@ export function LoginPage() {
           </label>
 
           <label className="block">
-            <span className="text-gray-700 text-sm font-medium">
+            <span
+              className="text-sm font-medium"
+              style={{
+                color: isDark ? 'rgba(255,255,255,0.85)' : '#374151',
+              }}
+            >
               Password
             </span>
 
@@ -71,11 +99,15 @@ export function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               type="password"
               required
-              className="mt-1 w-full rounded-lg px-3 py-2 outline-none"
+              className="mt-1 w-full rounded-lg px-3 py-2 outline-none transition-colors"
               style={{
-                backgroundColor: '#F5F5F5',
-                border: '1px solid #D1D5DB',
-                color: '#111827',
+                backgroundColor: isDark
+                  ? 'rgba(255,255,255,0.08)'
+                  : '#F5F5F5',
+                border: isDark
+                  ? '1px solid rgba(255,255,255,0.12)'
+                  : '1px solid #D1D5DB',
+                color: isDark ? 'white' : '#111827',
               }}
               placeholder="••••••••"
               autoComplete="current-password"
