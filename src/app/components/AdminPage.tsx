@@ -2,8 +2,12 @@ import { useState } from 'react';
 import { CheckCircle, XCircle, Inbox, Clock, CheckCheck, Ban, Filter } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useApp, type MessageStatus } from '../context/AppContext';
+import { APP_ADMIN_NAME, APP_NAME, APP_ORGANIZATION, appTheme, palette } from '../theme';
+import { AppLogo } from './AppLogo';
 
 type FilterTab = 'pending' | 'approved' | 'rejected' | 'all';
+
+const toAscii = (value: string) => value.replace(/[^\x00-\x7F]/g, '');
 
 function timeAgo(date: Date): string {
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
@@ -14,14 +18,36 @@ function timeAgo(date: Date): string {
   return `${hours}h ago`;
 }
 
-const STATUS_STYLES: Record<MessageStatus, { bg: string; text: string; darkBg: string; label: string }> = {
-  pending: { bg: '#FFF3E0', text: '#E65100', darkBg: '#2A1A00', label: 'Pending' },
-  approved: { bg: '#E8F5E9', text: '#2E7D32', darkBg: '#0A1F0A', label: 'Approved' },
-  rejected: { bg: '#FFEBEE', text: '#C62828', darkBg: '#1F0A0A', label: 'Rejected' },
+const STATUS_STYLES: Record<
+  MessageStatus,
+  { bg: string; text: string; darkBg: string; darkText: string; label: string }
+> = {
+  pending: {
+    bg: 'rgba(195,142,180,0.18)',
+    text: palette.darkBlueGrey,
+    darkBg: palette.darkTab,
+    darkText: palette.lightBlue,
+    label: 'Pending',
+  },
+  approved: {
+    bg: 'rgba(22,163,74,0.14)',
+    text: palette.approved,
+    darkBg: 'rgba(22,163,74,0.18)',
+    darkText: palette.approved,
+    label: 'Approved',
+  },
+  rejected: {
+    bg: 'rgba(220,38,38,0.14)',
+    text: palette.rejected,
+    darkBg: 'rgba(220,38,38,0.18)',
+    darkText: palette.rejected,
+    label: 'Rejected',
+  },
 };
 
 export function AdminPage() {
   const { messages, approveMessage, rejectMessage, isDark } = useApp();
+  const colors = isDark ? appTheme.dark : appTheme.light;
   const [activeTab, setActiveTab] = useState<FilterTab>('pending');
   const [actionedIds, setActionedIds] = useState<Set<string>>(new Set());
 
@@ -58,38 +84,41 @@ export function AdminPage() {
       transition={{ duration: 0.4, ease: 'easeOut' }}
       className="w-full max-w-2xl mx-auto"
     >
-      {/* Admin Header Card */}
       <div
         className="rounded-3xl overflow-hidden shadow-xl mb-5"
         style={{
-          border: `2px solid ${isDark ? '#1E3F8A' : '#003087'}`,
+          border: `2px solid ${colors.brandAccent}`,
+          boxShadow: colors.cardShadow,
         }}
       >
-        {/* Orange admin header */}
-        <div
-          className="relative px-6 pt-5 pb-10"
-          style={{ backgroundColor: isDark ? '#7A3000' : '#FF6B00' }}
-        >
+        <div className="relative px-6 pt-5 pb-10" style={{ backgroundColor: colors.actionAccent }}>
           <div className="flex items-center gap-3">
-            <div
-              className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg flex-shrink-0"
-              style={{
-                background: 'radial-gradient(circle at 35% 35%, #003087, #001A5C)',
-                border: '2.5px solid rgba(255,255,255,0.3)',
-              }}
-            >
-              <span className="text-white font-black text-xs">BU</span>
-            </div>
+            <AppLogo
+              size={48}
+              className="rounded-full shadow-lg flex-shrink-0 border-[2.5px] border-white/30"
+            />
             <div>
-              <p className="text-orange-100 text-[10px] uppercase tracking-widest leading-none mb-0.5 opacity-80">
-                College of Science
+              <p
+                className="text-[10px] uppercase tracking-widest leading-none mb-0.5 opacity-80"
+                style={{ color: isDark ? colors.text : 'rgba(255,255,255,0.9)' }}
+              >
+                {APP_ORGANIZATION}
               </p>
-              <h1 className="text-white font-bold text-lg leading-tight">Clock Display Admin</h1>
-              <p className="text-orange-100 text-[11px] opacity-70">Review & approve messages</p>
+              <h1
+                className="font-bold text-lg leading-tight"
+                style={{ color: isDark ? colors.text : '#FFFFFF' }}
+              >
+                {APP_ADMIN_NAME}
+              </h1>
+              <p
+                className="text-[11px] opacity-80"
+                style={{ color: isDark ? colors.text : 'rgba(255,255,255,0.88)' }}
+              >
+                Review and approve messages
+              </p>
             </div>
           </div>
 
-          {/* V-fold at bottom */}
           <div className="absolute bottom-0 left-0 right-0 overflow-hidden" style={{ height: 40 }}>
             <svg
               viewBox="0 0 400 40"
@@ -98,40 +127,35 @@ export function AdminPage() {
             >
               <polygon
                 points="0,40 0,0 200,40 400,0 400,40"
-                fill={isDark ? '#0B1F4A' : '#F4F0E6'}
+                fill={colors.pageBackground}
               />
             </svg>
           </div>
         </div>
 
-        {/* Stats row */}
         <div
           className="grid grid-cols-3 divide-x text-center py-3"
           style={{
-            backgroundColor: isDark ? '#162A5C' : '#FFFFFF',
-            borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,48,135,0.1)'}`,
-            divideColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,48,135,0.1)',
+            backgroundColor: colors.surfaceBackground,
+            borderTop: `1px solid ${colors.border}`,
           }}
         >
           {(['pending', 'approved', 'rejected'] as const).map((key) => (
-            <div
-              key={key}
-              className="py-1"
-              style={{ borderRight: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,48,135,0.1)'}` }}
-            >
+            <div key={key} className="py-1" style={{ borderRight: `1px solid ${colors.border}` }}>
               <p
                 className="font-bold text-xl"
                 style={{
                   color:
-                    key === 'pending' ? '#FF6B00' : key === 'approved' ? '#16a34a' : '#dc2626',
+                    key === 'pending'
+                      ? colors.pendingAccent
+                      : key === 'approved'
+                      ? palette.approved
+                      : palette.rejected,
                 }}
               >
                 {counts[key]}
               </p>
-              <p
-                className="text-[10px] uppercase tracking-wide capitalize"
-                style={{ color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }}
-              >
+              <p className="text-[10px] uppercase tracking-wide capitalize" style={{ color: colors.faintText }}>
                 {key}
               </p>
             </div>
@@ -139,30 +163,21 @@ export function AdminPage() {
         </div>
       </div>
 
-      {/* Filter Tabs */}
-      <div
-        className="flex gap-1 rounded-2xl p-1 mb-4"
-        style={{ backgroundColor: isDark ? '#162A5C' : '#E8E4D8' }}
-      >
+      <div className="flex gap-1 rounded-2xl p-1 mb-4" style={{ backgroundColor: colors.tabStripBackground }}>
         {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200"
             style={{
-              backgroundColor:
-                activeTab === tab.key
-                  ? isDark
-                    ? '#003087'
-                    : '#003087'
-                  : 'transparent',
+              backgroundColor: activeTab === tab.key ? colors.pendingAccent : 'transparent',
               color:
                 activeTab === tab.key
-                  ? '#FFFFFF'
-                  : isDark
-                  ? 'rgba(255,255,255,0.45)'
-                  : 'rgba(0,0,0,0.45)',
-              boxShadow: activeTab === tab.key ? '0 2px 8px rgba(0,48,135,0.3)' : 'none',
+                  ? isDark
+                    ? colors.text
+                    : palette.darkBlueGrey
+                  : colors.faintText,
+              boxShadow: activeTab === tab.key ? colors.cardShadow : 'none',
             }}
           >
             {tab.icon}
@@ -171,8 +186,19 @@ export function AdminPage() {
               className="text-[10px] font-bold px-1 rounded-full"
               style={{
                 backgroundColor:
-                  activeTab === tab.key ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)',
-                color: activeTab === tab.key ? '#fff' : isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)',
+                  activeTab === tab.key
+                    ? isDark
+                      ? 'rgba(255,255,255,0.24)'
+                      : 'rgba(38,66,90,0.14)'
+                    : isDark
+                    ? 'rgba(255,255,255,0.08)'
+                    : 'rgba(38,66,90,0.1)',
+                color:
+                  activeTab === tab.key
+                    ? isDark
+                      ? colors.text
+                      : palette.darkBlueGrey
+                    : colors.faintText,
               }}
             >
               {counts[tab.key]}
@@ -181,7 +207,6 @@ export function AdminPage() {
         ))}
       </div>
 
-      {/* Message List */}
       <AnimatePresence mode="popLayout">
         {filtered.length === 0 ? (
           <motion.div
@@ -191,26 +216,20 @@ export function AdminPage() {
             exit={{ opacity: 0 }}
             className="flex flex-col items-center justify-center py-16 rounded-3xl"
             style={{
-              backgroundColor: isDark ? '#162A5C' : '#FFFFFF',
-              border: `2px dashed ${isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,48,135,0.15)'}`,
+              backgroundColor: colors.surfaceBackground,
+              border: `2px dashed ${colors.border}`,
             }}
           >
             <div
               className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
-              style={{ backgroundColor: isDark ? '#0F1F4A' : '#F4F0E6' }}
+              style={{ backgroundColor: colors.bubbleBackground }}
             >
-              <Inbox size={28} style={{ color: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,48,135,0.25)' }} />
+              <Inbox size={28} style={{ color: colors.faintText }} />
             </div>
-            <p
-              className="font-semibold text-base"
-              style={{ color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,48,135,0.4)' }}
-            >
+            <p className="font-semibold text-base" style={{ color: colors.mutedText }}>
               No messages here
             </p>
-            <p
-              className="text-xs mt-1"
-              style={{ color: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.25)' }}
-            >
+            <p className="text-xs mt-1" style={{ color: colors.faintText }}>
               {activeTab === 'pending'
                 ? 'All caught up! No pending messages.'
                 : `No ${activeTab} messages yet.`}
@@ -231,23 +250,13 @@ export function AdminPage() {
                   exit={{ opacity: 0, x: 40, transition: { duration: 0.25 } }}
                   transition={{ delay: index * 0.04, duration: 0.3 }}
                   className="rounded-2xl overflow-hidden shadow-md"
-                  style={{
-                    border: `1.5px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,48,135,0.12)'}`,
-                  }}
+                  style={{ border: `1.5px solid ${colors.border}` }}
                 >
-                  {/* Message card header */}
-                  <div
-                    className="px-4 pt-3.5 pb-3"
-                    style={{ backgroundColor: isDark ? '#162A5C' : '#FFFFFF' }}
-                  >
-                    {/* Top row: timestamp + status badge */}
+                  <div className="px-4 pt-3.5 pb-3" style={{ backgroundColor: colors.surfaceBackground }}>
                     <div className="flex items-center justify-between mb-2.5">
                       <div className="flex items-center gap-1.5">
-                        <Clock size={11} style={{ color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)' }} />
-                        <span
-                          className="text-[11px]"
-                          style={{ color: isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.35)' }}
-                        >
+                        <Clock size={11} style={{ color: colors.faintText }} />
+                        <span className="text-[11px]" style={{ color: colors.faintText }}>
                           {timeAgo(msg.timestamp)}
                         </span>
                       </div>
@@ -256,22 +265,26 @@ export function AdminPage() {
                         className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
                         style={{
                           backgroundColor: isDark ? statusStyle.darkBg : statusStyle.bg,
-                          color: statusStyle.text,
+                          color: isDark ? statusStyle.darkText : statusStyle.text,
                         }}
                       >
                         {statusStyle.label}
                       </span>
                     </div>
 
-                    {/* Message content */}
                     <div
                       className="rounded-xl px-3.5 py-3 mb-3 relative overflow-hidden"
                       style={{
-                        backgroundColor: isDark ? '#0F1F4A' : '#F7F4EC',
-                        borderLeft: `3px solid ${isDark ? '#FF6B00' : '#003087'}`,
+                        backgroundColor: colors.bubbleBackground,
+                        borderLeft: `3px solid ${
+                          msg.status === 'pending'
+                            ? colors.pendingAccent
+                            : msg.status === 'approved'
+                            ? palette.approved
+                            : palette.rejected
+                        }`,
                       }}
                     >
-                      {/* Decorative lines */}
                       <div
                         className="absolute inset-0 opacity-40"
                         style={{
@@ -287,15 +300,14 @@ export function AdminPage() {
                       <p
                         className="relative text-sm font-medium"
                         style={{
-                          color: isDark ? 'rgba(255,255,255,0.88)' : '#1A1A2E',
+                          color: colors.text,
                           fontFamily: 'Georgia, serif',
                         }}
                       >
-                        "{msg.content}"
+                        "{toAscii(msg.content)}"
                       </p>
                     </div>
 
-                    {/* Action buttons — only for pending */}
                     {msg.status === 'pending' && (
                       <div className="flex gap-2">
                         <motion.button
@@ -305,7 +317,7 @@ export function AdminPage() {
                           whileTap={{ scale: 0.97 }}
                           className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm text-white transition-all"
                           style={{
-                            backgroundColor: isActioned ? '#6b7280' : '#16a34a',
+                            backgroundColor: isActioned ? colors.disabledAction : palette.approved,
                             boxShadow: isActioned ? 'none' : '0 3px 12px rgba(22,163,74,0.35)',
                           }}
                         >
@@ -319,7 +331,7 @@ export function AdminPage() {
                           whileTap={{ scale: 0.97 }}
                           className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm text-white transition-all"
                           style={{
-                            backgroundColor: isActioned ? '#6b7280' : '#dc2626',
+                            backgroundColor: isActioned ? colors.disabledAction : palette.rejected,
                             boxShadow: isActioned ? 'none' : '0 3px 12px rgba(220,38,38,0.3)',
                           }}
                         >
@@ -329,19 +341,18 @@ export function AdminPage() {
                       </div>
                     )}
 
-                    {/* Approved/Rejected indicator */}
                     {msg.status !== 'pending' && (
                       <div
                         className="flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold"
                         style={{
                           backgroundColor: isDark ? statusStyle.darkBg : statusStyle.bg,
-                          color: statusStyle.text,
+                          color: isDark ? statusStyle.darkText : statusStyle.text,
                         }}
                       >
                         {msg.status === 'approved' ? (
                           <>
                             <CheckCheck size={14} />
-                            Approved – Sent to Display
+                            Approved - Sent to {APP_NAME}
                           </>
                         ) : (
                           <>

@@ -2,11 +2,15 @@ import { FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
+import { APP_ADMIN_NAME, appTheme, palette } from '../theme';
+
+const toAscii = (value: string) => value.replace(/[^\x00-\x7F]/g, '');
 
 export function LoginPage() {
   const { signIn, loading } = useAuth();
   const { isDark } = useApp();
   const navigate = useNavigate();
+  const colors = isDark ? appTheme.dark : appTheme.light;
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,7 +24,11 @@ export function LoginPage() {
       await signIn(email.trim(), password);
       navigate('/admin');
     } catch (err: any) {
-      setError(err?.message ?? 'Login failed. Please check your credentials.');
+      setError(
+        toAscii(
+          err?.message ?? 'Login failed. Please check your credentials.',
+        ),
+      );
     }
   };
 
@@ -29,55 +37,35 @@ export function LoginPage() {
       <div
         className="w-full max-w-md p-6 rounded-2xl shadow-lg transition-colors"
         style={{
-          backgroundColor: isDark ? '#102554' : 'white',
-          border: isDark
-            ? '1px solid rgba(255,255,255,0.1)'
-            : '1px solid rgba(0,0,0,0.08)',
+          backgroundColor: colors.cardBackground,
+          border: `1px solid ${colors.border}`,
+          boxShadow: colors.cardShadow,
         }}
       >
-        <h1
-          className="text-2xl font-bold mb-2"
-          style={{
-            color: isDark ? 'white' : '#003087',
-          }}
-        >
-          Admin Login
+        <h1 className="text-2xl font-bold mb-2" style={{ color: colors.text }}>
+          {APP_ADMIN_NAME}
         </h1>
 
-        <p
-          className="text-sm mb-5"
-          style={{
-            color: isDark ? 'rgba(255,255,255,0.65)' : '#4B5563',
-          }}
-        >
+        <p className="text-sm mb-5" style={{ color: colors.mutedText }}>
           Enter your admin credentials to continue.
         </p>
 
         <form onSubmit={onSubmit} className="space-y-4">
           <label className="block">
-            <span
-              className="text-sm font-medium"
-              style={{
-                color: isDark ? 'rgba(255,255,255,0.85)' : '#374151',
-              }}
-            >
+            <span className="text-sm font-medium" style={{ color: colors.text }}>
               Email
             </span>
 
             <input
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => setEmail(toAscii(e.target.value))}
               type="email"
               required
               className="mt-1 w-full rounded-lg px-3 py-2 outline-none transition-colors"
               style={{
-                backgroundColor: isDark
-                  ? 'rgba(255,255,255,0.08)'
-                  : '#F5F5F5',
-                border: isDark
-                  ? '1px solid rgba(255,255,255,0.12)'
-                  : '1px solid #D1D5DB',
-                color: isDark ? 'white' : '#111827',
+                backgroundColor: colors.surfaceBackground,
+                border: `1px solid ${colors.border}`,
+                color: colors.text,
               }}
               placeholder="admin@example.com"
               autoComplete="email"
@@ -85,31 +73,22 @@ export function LoginPage() {
           </label>
 
           <label className="block">
-            <span
-              className="text-sm font-medium"
-              style={{
-                color: isDark ? 'rgba(255,255,255,0.85)' : '#374151',
-              }}
-            >
+            <span className="text-sm font-medium" style={{ color: colors.text }}>
               Password
             </span>
 
             <input
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => setPassword(toAscii(e.target.value))}
               type="password"
               required
               className="mt-1 w-full rounded-lg px-3 py-2 outline-none transition-colors"
               style={{
-                backgroundColor: isDark
-                  ? 'rgba(255,255,255,0.08)'
-                  : '#F5F5F5',
-                border: isDark
-                  ? '1px solid rgba(255,255,255,0.12)'
-                  : '1px solid #D1D5DB',
-                color: isDark ? 'white' : '#111827',
+                backgroundColor: colors.surfaceBackground,
+                border: `1px solid ${colors.border}`,
+                color: colors.text,
               }}
-              placeholder="••••••••"
+              placeholder="********"
               autoComplete="current-password"
             />
           </label>
@@ -118,8 +97,8 @@ export function LoginPage() {
             <div
               className="text-sm px-3 py-2 rounded-lg"
               style={{
-                backgroundColor: 'rgba(255,107,0,0.12)',
-                color: '#FF6B00',
+                backgroundColor: isDark ? 'rgba(220,38,38,0.18)' : 'rgba(220,38,38,0.12)',
+                color: palette.rejected,
               }}
               role="alert"
             >
@@ -132,13 +111,16 @@ export function LoginPage() {
             disabled={loading}
             className="w-full mt-2 rounded-lg font-semibold transition-transform active:scale-[0.99]"
             style={{
-              backgroundColor: '#FF6B00',
-              color: 'white',
+              backgroundColor: colors.actionAccent,
+              color: isDark ? colors.text : '#FFFFFF',
               padding: '10px 14px',
               opacity: loading ? 0.7 : 1,
+              boxShadow: isDark
+                ? '0 10px 24px rgba(195,142,180,0.2)'
+                : '0 10px 24px rgba(134,168,207,0.28)',
             }}
           >
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? 'Signing in...' : 'Login'}
           </button>
         </form>
       </div>

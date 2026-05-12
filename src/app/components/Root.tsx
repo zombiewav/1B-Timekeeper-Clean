@@ -1,50 +1,55 @@
 import { Outlet, Link, useLocation } from 'react-router';
 import { Moon, Sun, Mail, ShieldCheck } from 'lucide-react';
-import { useApp } from '../context/AppContext';
 import { motion } from 'motion/react';
+import { useApp } from '../context/AppContext';
+import { APP_NAME, APP_ORGANIZATION, APP_SYSTEM_NAME, appTheme } from '../theme';
+import { AppLogo } from './AppLogo';
 
 export function Root() {
   const { isDark, toggleDark, messages } = useApp();
   const location = useLocation();
-  const isAdmin = location.pathname === '/admin';
+  const isAdmin = location.pathname.startsWith('/admin');
+  const colors = isDark ? appTheme.dark : appTheme.light;
   const pendingCount = messages.filter((m) => m.status === 'pending').length;
 
   return (
     <div
       className={`min-h-screen transition-colors duration-300 ${isDark ? 'dark' : ''}`}
-      style={{
-        backgroundColor: isDark ? '#0B1F4A' : '#F4F0E6',
-      }}
+      style={{ backgroundColor: colors.pageBackground }}
     >
-      {/* Top Navigation */}
       <nav
         className="sticky top-0 z-50 border-b transition-colors duration-300"
         style={{
-          backgroundColor: isDark ? '#07153A' : '#003087',
-          borderBottomColor: isDark ? '#1A3A7A' : '#002070',
+          backgroundColor: colors.navBackground,
+          borderBottomColor: colors.navBorder,
         }}
       >
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
-          {/* Brand */}
           <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-full bg-[#FF6B00] flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
-              <span className="text-white text-xs font-black">BU</span>
-            </div>
+            <AppLogo size={32} className="rounded-full shadow-md group-hover:scale-105 transition-transform" />
             <div className="hidden sm:block">
-              <p className="text-orange-300 text-[10px] uppercase tracking-widest leading-none">College of Science</p>
-              <p className="text-white text-sm font-semibold leading-tight">Clock Display</p>
+              <p
+                className="text-[10px] uppercase tracking-widest leading-none"
+                style={{ color: 'rgba(255,255,255,0.76)' }}
+              >
+                {APP_ORGANIZATION}
+              </p>
+              <p className="text-white text-sm font-semibold leading-tight">{APP_NAME}</p>
             </div>
-            <p className="sm:hidden text-white text-sm font-semibold">Clock Display</p>
+            <p className="sm:hidden text-white text-sm font-semibold">{APP_NAME}</p>
           </Link>
 
-          {/* Right actions */}
           <div className="flex items-center gap-2">
             <Link
               to={isAdmin ? '/' : '/admin'}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors"
               style={{
-                backgroundColor: isAdmin ? 'rgba(255,107,0,0.15)' : 'rgba(255,255,255,0.1)',
-                color: isAdmin ? '#FF6B00' : 'rgba(255,255,255,0.85)',
+                backgroundColor: isAdmin
+                  ? isDark
+                    ? 'rgba(134,168,207,0.18)'
+                    : 'rgba(255,255,255,0.3)'
+                  : 'rgba(255,255,255,0.14)',
+                color: isAdmin ? (isDark ? colors.brandAccent : colors.text) : 'rgba(255,255,255,0.92)',
               }}
             >
               {isAdmin ? (
@@ -57,7 +62,13 @@ export function Root() {
                   <ShieldCheck size={14} />
                   <span className="hidden sm:inline">Admin</span>
                   {pendingCount > 0 && (
-                    <span className="bg-[#FF6B00] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                    <span
+                      className="text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center"
+                      style={{
+                        backgroundColor: isDark ? colors.brandAccent : colors.actionAccent,
+                        color: isDark ? colors.text : '#FFFFFF',
+                      }}
+                    >
                       {pendingCount}
                     </span>
                   )}
@@ -68,7 +79,10 @@ export function Root() {
             <button
               onClick={toggleDark}
               className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
-              style={{ backgroundColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.85)' }}
+              style={{
+                backgroundColor: 'rgba(255,255,255,0.14)',
+                color: 'rgba(255,255,255,0.92)',
+              }}
               aria-label="Toggle dark mode"
             >
               <motion.div
@@ -84,18 +98,13 @@ export function Root() {
         </div>
       </nav>
 
-      {/* Main content */}
       <main className="max-w-2xl mx-auto px-2 sm:px-4 py-4 sm:py-8">
         <Outlet />
       </main>
 
-      {/* Footer */}
       <footer className="text-center pb-6 mt-4">
-        <p
-          className="text-xs"
-          style={{ color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)' }}
-        >
-          Bicol University College of Science · ESP32 Clock Display System
+        <p className="text-xs" style={{ color: colors.faintText }}>
+          {APP_ORGANIZATION} | {APP_SYSTEM_NAME}
         </p>
       </footer>
     </div>

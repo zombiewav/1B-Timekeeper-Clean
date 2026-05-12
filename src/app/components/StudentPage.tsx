@@ -1,14 +1,18 @@
 import { useState } from 'react';
-import { Send, CheckCircle, AlertCircle, Loader2, Clock, Monitor } from 'lucide-react';
+import { Send, CheckCircle, AlertCircle, Loader2, Monitor } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useApp } from '../context/AppContext';
+import { APP_NAME, APP_ORGANIZATION, APP_RECIPIENT_LABEL, appTheme, palette } from '../theme';
+import { AppLogo } from './AppLogo';
 
 const MAX_CHARS = 32;
+const toAscii = (value: string) => value.replace(/[^\x00-\x7F]/g, '');
 
 type SubmitState = 'idle' | 'sending' | 'success' | 'error';
 
 export function StudentPage() {
   const { submitMessage, isDark } = useApp();
+  const colors = isDark ? appTheme.dark : appTheme.light;
   const [message, setMessage] = useState('');
   const [submitState, setSubmitState] = useState<SubmitState>('idle');
 
@@ -25,7 +29,6 @@ export function StudentPage() {
     setSubmitState('sending');
     await new Promise((resolve) => setTimeout(resolve, 1400));
 
-    // Simulate ~95% success
     if (Math.random() > 0.05) {
       submitMessage(message);
       setSubmitState('success');
@@ -46,51 +49,40 @@ export function StudentPage() {
       transition={{ duration: 0.4, ease: 'easeOut' }}
       className="w-full max-w-xl mx-auto"
     >
-      {/* Envelope Card */}
       <div
         className="rounded-3xl overflow-hidden shadow-2xl"
         style={{
-          border: `2px solid ${isDark ? '#1E3F8A' : '#003087'}`,
-          boxShadow: isDark
-            ? '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(30,63,138,0.4)'
-            : '0 20px 60px rgba(0,48,135,0.2), 0 0 0 1px rgba(0,48,135,0.1)',
+          border: `2px solid ${colors.brandAccent}`,
+          boxShadow: colors.cardShadow,
         }}
       >
-        {/* ── Envelope Header (Blue with V-fold) ── */}
-        <div className="relative" style={{ backgroundColor: isDark ? '#001855' : '#003087' }}>
-          {/* Header content */}
+        <div className="relative" style={{ backgroundColor: colors.brandAccent }}>
           <div className="pt-6 pb-14 px-6 flex items-center gap-3">
-            <div
-              className="w-13 h-13 rounded-full flex items-center justify-center shadow-lg flex-shrink-0"
-              style={{
-                background: 'radial-gradient(circle at 35% 35%, #FF8C00, #FF6B00)',
-                border: '2.5px solid rgba(255,140,0,0.6)',
-                width: 52,
-                height: 52,
-              }}
-            >
-              <span className="text-white font-black text-sm">BU</span>
-            </div>
+            <AppLogo
+              size={52}
+              className="rounded-full shadow-lg flex-shrink-0 border-[2.5px] border-white/25"
+            />
             <div>
-              <p className="text-orange-300 text-[10px] uppercase tracking-[0.18em] leading-none mb-0.5">
-                College of Science
+              <p
+                className="text-[10px] uppercase tracking-[0.18em] leading-none mb-0.5"
+                style={{ color: 'rgba(255,255,255,0.72)' }}
+              >
+                {APP_ORGANIZATION}
               </p>
-              <h1 className="text-white font-bold text-lg leading-tight">Clock Display</h1>
+              <h1 className="text-white font-bold text-lg leading-tight">{APP_NAME}</h1>
               <div className="flex items-center gap-1 mt-0.5">
-                <Monitor size={10} className="text-blue-300" />
-                <p className="text-blue-200 text-[11px]">To: ESP32 Clock Display</p>
+                <Monitor size={10} style={{ color: 'rgba(255,255,255,0.82)' }} />
+                <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.82)' }}>
+                  {APP_RECIPIENT_LABEL}
+                </p>
               </div>
-              <p className="text-blue-300 text-[9px] italic mt-1">
+              <p className="text-[9px] italic mt-1" style={{ color: 'rgba(255,255,255,0.66)' }}>
                 Made by BSIT 1B
               </p>
             </div>
           </div>
 
-          {/* V-fold: white/dark chevron at bottom of header */}
-          <div
-            className="absolute bottom-0 left-0 right-0 overflow-hidden"
-            style={{ height: 48 }}
-          >
+          <div className="absolute bottom-0 left-0 right-0 overflow-hidden" style={{ height: 48 }}>
             <svg
               viewBox="0 0 400 48"
               preserveAspectRatio="none"
@@ -98,68 +90,59 @@ export function StudentPage() {
             >
               <polygon
                 points="0,48 0,0 200,48 400,0 400,48"
-                fill={isDark ? '#162A5C' : '#FFFFFF'}
+                fill={colors.surfaceBackground}
               />
             </svg>
           </div>
         </div>
 
-        {/* ── Letter Paper Body ── */}
-        <div
-          style={{
-            backgroundColor: isDark ? '#162A5C' : '#FFFFFF',
-          }}
-        >
-          {/* Textarea */}
+        <div style={{ backgroundColor: colors.surfaceBackground }}>
           <div className="px-6 py-5">
             <textarea
               value={message}
-              onChange={(e) => setMessage(e.target.value)}
+              onChange={(e) => setMessage(toAscii(e.target.value))}
               placeholder="Write your message..."
               disabled={submitState === 'sending' || submitState === 'success'}
               className="w-full bg-transparent resize-none outline-none placeholder-opacity-40"
               style={{
                 minHeight: 120,
                 lineHeight: '1.6',
-                color: isDark ? 'rgba(255,255,255,0.88)' : '#1a1a2e',
-                caretColor: '#FF6B00',
+                color: colors.text,
+                caretColor: colors.actionAccent,
                 fontSize: '15px',
                 fontFamily: 'Georgia, serif',
-                placeholderColor: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
               }}
               maxLength={MAX_CHARS + 5}
               rows={4}
             />
 
-            {/* Character counter */}
             <div className="flex items-center justify-end gap-1 mt-2">
               <span
                 className="text-xs font-mono transition-colors"
                 style={{
                   color: isOverLimit
-                    ? '#ef4444'
+                    ? palette.rejected
                     : isNearLimit
-                    ? '#FF6B00'
-                    : isDark
-                    ? 'rgba(255,255,255,0.3)'
-                    : 'rgba(0,0,0,0.3)',
+                    ? colors.actionAccent
+                    : colors.faintText,
                 }}
               >
                 {charsUsed}/{MAX_CHARS}
               </span>
               {isOverLimit && (
-                <span className="text-red-500 text-xs">–{Math.abs(charsLeft)}</span>
+                <span className="text-xs" style={{ color: palette.rejected }}>
+                  -{Math.abs(charsLeft)}
+                </span>
               )}
             </div>
           </div>
         </div>
 
-        {/* ── Footer / Submit Area ── */}
         <div
           className="px-6 py-4"
           style={{
-            backgroundColor: isDark ? '#0F2050' : '#F7F4EC',
-            borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,48,135,0.1)'}`,
+            backgroundColor: colors.bubbleBackground,
+            borderTop: `1px solid ${colors.border}`,
           }}
         >
           <AnimatePresence mode="wait">
@@ -174,11 +157,14 @@ export function StudentPage() {
                 disabled={!canSubmit}
                 className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl font-semibold text-white transition-all duration-200 shadow-lg"
                 style={{
-                  backgroundColor: canSubmit ? '#FF6B00' : isDark ? '#2A3F6A' : '#D1C9B8',
-                  color: canSubmit ? '#fff' : isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
+                  backgroundColor: canSubmit ? colors.actionAccent : colors.disabledAction,
+                  color: canSubmit ? '#FFFFFF' : isDark ? 'rgba(255,255,255,0.72)' : colors.text,
                   cursor: canSubmit ? 'pointer' : 'not-allowed',
-                  boxShadow: canSubmit ? '0 4px 20px rgba(255,107,0,0.4)' : 'none',
-                  transform: canSubmit ? undefined : undefined,
+                  boxShadow: canSubmit
+                    ? isDark
+                      ? '0 6px 20px rgba(195,142,180,0.28)'
+                      : '0 6px 20px rgba(134,168,207,0.35)'
+                    : 'none',
                 }}
                 whileHover={canSubmit ? { scale: 1.02 } : undefined}
                 whileTap={canSubmit ? { scale: 0.98 } : undefined}
@@ -196,10 +182,10 @@ export function StudentPage() {
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.2 }}
                 className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl font-semibold text-white"
-                style={{ backgroundColor: '#003087' }}
+                style={{ backgroundColor: colors.brandAccent }}
               >
                 <Loader2 size={16} className="animate-spin" />
-                Sending…
+                Sending...
               </motion.div>
             )}
 
@@ -211,7 +197,7 @@ export function StudentPage() {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.25, type: 'spring', stiffness: 300 }}
                 className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl font-semibold text-white"
-                style={{ backgroundColor: '#16a34a' }}
+                style={{ backgroundColor: palette.approved }}
               >
                 <CheckCircle size={16} />
                 Message Sent!
@@ -229,7 +215,7 @@ export function StudentPage() {
               >
                 <div
                   className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl font-semibold text-white"
-                  style={{ backgroundColor: '#dc2626' }}
+                  style={{ backgroundColor: palette.rejected }}
                 >
                   <AlertCircle size={16} />
                   Failed to send. Try again.
@@ -238,28 +224,23 @@ export function StudentPage() {
             )}
           </AnimatePresence>
 
-          {/* Helper hint */}
-          <p
-            className="text-center text-[11px] mt-2.5"
-            style={{ color: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.3)' }}
-          >
+          <p className="text-center text-[11px] mt-2.5" style={{ color: colors.faintText }}>
             Messages are reviewed before display
           </p>
         </div>
       </div>
 
-      {/* Decorative envelope shadow flap */}
       <div
         className="mx-4 h-2 rounded-b-2xl"
         style={{
-          backgroundColor: isDark ? '#001040' : '#C8C0B0',
+          backgroundColor: isDark ? 'rgba(0,0,0,0.32)' : 'rgba(38,66,90,0.18)',
           opacity: 0.6,
         }}
       />
       <div
         className="mx-8 h-1.5 rounded-b-2xl"
         style={{
-          backgroundColor: isDark ? '#00092A' : '#B0A898',
+          backgroundColor: isDark ? 'rgba(0,0,0,0.22)' : 'rgba(38,66,90,0.12)',
           opacity: 0.4,
         }}
       />
