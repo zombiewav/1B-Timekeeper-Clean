@@ -17,6 +17,7 @@ interface AppContextType {
   submitMessage: (content: string) => void;
   approveMessage: (id: string) => void;
   rejectMessage: (id: string) => void;
+  deleteMessage: (id: string) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -103,9 +104,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
     })();
   };
 
+  const deleteMessage = (id: string) => {
+    void (async () => {
+      const { error } = await supabase.from('messages').delete().eq('id', id);
+
+      if (error) {
+        console.error('deleteMessage error:', error);
+        return;
+      }
+
+      await fetchMessages();
+    })();
+  };
+
   return (
     <AppContext.Provider
-      value={{ messages, isDark, toggleDark, submitMessage, approveMessage, rejectMessage }}
+      value={{
+        messages,
+        isDark,
+        toggleDark,
+        submitMessage,
+        approveMessage,
+        rejectMessage,
+        deleteMessage,
+      }}
     >
       {children}
     </AppContext.Provider>

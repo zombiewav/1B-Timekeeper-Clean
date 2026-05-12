@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CheckCircle, XCircle, Inbox, Clock, CheckCheck, Ban, Filter } from 'lucide-react';
+import { CheckCircle, XCircle, Inbox, Clock, CheckCheck, Ban, Filter, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useApp, type MessageStatus } from '../context/AppContext';
 import { APP_ADMIN_NAME, APP_NAME, APP_ORGANIZATION, appTheme, palette } from '../theme';
@@ -46,7 +46,7 @@ const STATUS_STYLES: Record<
 };
 
 export function AdminPage() {
-  const { messages, approveMessage, rejectMessage, isDark } = useApp();
+  const { messages, approveMessage, rejectMessage, deleteMessage, isDark } = useApp();
   const colors = isDark ? appTheme.dark : appTheme.light;
   const [activeTab, setActiveTab] = useState<FilterTab>('pending');
   const [actionedIds, setActionedIds] = useState<Set<string>>(new Set());
@@ -75,6 +75,11 @@ export function AdminPage() {
   const handleReject = (id: string) => {
     setActionedIds((prev) => new Set(prev).add(id));
     setTimeout(() => rejectMessage(id), 350);
+  };
+
+  const handleDelete = (id: string) => {
+    setActionedIds((prev) => new Set(prev).add(id));
+    setTimeout(() => deleteMessage(id), 200);
   };
 
   return (
@@ -206,6 +211,23 @@ export function AdminPage() {
           </button>
         ))}
       </div>
+
+      {activeTab !== 'pending' && (
+        <div
+          className="rounded-2xl px-4 py-3 mb-4"
+          style={{
+            backgroundColor: colors.surfaceBackground,
+            border: `1px solid ${colors.border}`,
+          }}
+        >
+          <p className="text-sm font-semibold" style={{ color: colors.text }}>
+            History
+          </p>
+          <p className="text-xs mt-1" style={{ color: colors.faintText }}>
+            Approved and rejected records stay here until you delete them.
+          </p>
+        </div>
+      )}
 
       <AnimatePresence mode="popLayout">
         {filtered.length === 0 ? (
@@ -342,24 +364,41 @@ export function AdminPage() {
                     )}
 
                     {msg.status !== 'pending' && (
-                      <div
-                        className="flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold"
-                        style={{
-                          backgroundColor: isDark ? statusStyle.darkBg : statusStyle.bg,
-                          color: isDark ? statusStyle.darkText : statusStyle.text,
-                        }}
-                      >
-                        {msg.status === 'approved' ? (
-                          <>
-                            <CheckCheck size={14} />
-                            Approved - Sent to {APP_NAME}
-                          </>
-                        ) : (
-                          <>
-                            <Ban size={14} />
-                            Rejected
-                          </>
-                        )}
+                      <div className="flex gap-2">
+                        <div
+                          className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold"
+                          style={{
+                            backgroundColor: isDark ? statusStyle.darkBg : statusStyle.bg,
+                            color: isDark ? statusStyle.darkText : statusStyle.text,
+                          }}
+                        >
+                          {msg.status === 'approved' ? (
+                            <>
+                              <CheckCheck size={14} />
+                              Approved - Sent to {APP_NAME}
+                            </>
+                          ) : (
+                            <>
+                              <Ban size={14} />
+                              Rejected
+                            </>
+                          )}
+                        </div>
+                        <motion.button
+                          onClick={() => handleDelete(msg.id)}
+                          disabled={isActioned}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.97 }}
+                          className="px-3 rounded-xl font-semibold text-sm text-white transition-all flex items-center justify-center gap-2"
+                          style={{
+                            backgroundColor: isActioned ? colors.disabledAction : colors.actionAccent,
+                            boxShadow: isActioned ? 'none' : colors.cardShadow,
+                          }}
+                          title={`Delete ${msg.status} history`}
+                        >
+                          <Trash2 size={14} />
+                          <span className="hidden sm:inline">Delete</span>
+                        </motion.button>
                       </div>
                     )}
                   </div>
