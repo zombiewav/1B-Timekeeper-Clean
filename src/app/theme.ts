@@ -1,6 +1,6 @@
 export const APP_NAME = 'TimeKeeper';
 export const APP_ADMIN_NAME = `${APP_NAME} Admin`;
-export const APP_ORGANIZATION = 'Bicol University College of Science';
+export const APP_ORGANIZATION = 'BUCS - IT Department';
 export const APP_SYSTEM_NAME = `${APP_NAME} System`;
 export const APP_RECIPIENT_LABEL = `To: ${APP_NAME}`;
 
