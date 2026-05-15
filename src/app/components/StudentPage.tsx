@@ -3,6 +3,7 @@ import { Send, CheckCircle, AlertCircle, Loader2, Monitor } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useApp } from '../context/AppContext';
 import { APP_NAME, APP_ORGANIZATION, APP_RECIPIENT_LABEL, appTheme, palette } from '../theme';
+import { AlarmRequestForm } from './AlarmRequestForm';
 import { AppLogo } from './AppLogo';
 
 const MAX_CHARS = 32;
@@ -244,6 +245,10 @@ export function StudentPage() {
           opacity: 0.4,
         }}
       />
+
+      <div className="mt-4">
+        <AlarmRequestForm />
+      </div>
     </motion.div>
   );
 }

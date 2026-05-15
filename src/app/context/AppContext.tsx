@@ -1,32 +1,53 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+ import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from '../../lib/supabase';
+import type { AlarmRequest, AlarmRequestStatus } from '../models/alarm';
 
 export type MessageStatus = 'pending' | 'approved' | 'rejected';
 
 export interface Message {
+
   id: string;
   content: string;
   status: MessageStatus;
   timestamp: Date;
 }
 
+
 interface AppContextType {
   messages: Message[];
+
+  alarmRequests: AlarmRequest[];
+
   isDark: boolean;
   toggleDark: () => void;
+
   submitMessage: (content: string) => void;
   approveMessage: (id: string) => void;
   rejectMessage: (id: string) => void;
   deleteMessage: (id: string) => void;
+
+  submitAlarmRequest: (input: {
+    title: string;
+    reason: string;
+    alarmTime: string;
+  }) => void;
+  approveAlarmRequest: (id: string) => void;
+  rejectAlarmRequest: (id: string) => void;
 }
+
 
 const AppContext = createContext<AppContextType | null>(null);
 
 const INITIAL_MESSAGES: Message[] = [];
 
+const INITIAL_ALARM_REQUESTS: AlarmRequest[] = [];
+
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
+  const [alarmRequests, setAlarmRequests] = useState<AlarmRequest[]>(INITIAL_ALARM_REQUESTS);
   const [isDark, setIsDark] = useState(false);
+
 
   const toggleDark = () => setIsDark((d) => !d);
 
@@ -117,22 +138,58 @@ export function AppProvider({ children }: { children: ReactNode }) {
     })();
   };
 
+  const submitAlarmRequest = (input: {
+    title: string;
+    reason: string;
+    alarmTime: string;
+  }) => {
+    const id = crypto.randomUUID();
+
+    const next: AlarmRequest = {
+      id,
+      title: input.title,
+      reason: input.reason,
+      alarmTime: input.alarmTime,
+      status: 'pending' as AlarmRequestStatus,
+      timestamp: new Date(),
+    };
+
+    setAlarmRequests((prev) => [next, ...prev]);
+  };
+
+  const approveAlarmRequest = (id: string) => {
+    setAlarmRequests((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, status: 'approved' } : r)),
+    );
+  };
+
+  const rejectAlarmRequest = (id: string) => {
+    setAlarmRequests((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, status: 'rejected' } : r)),
+    );
+  };
+
   return (
     <AppContext.Provider
       value={{
         messages,
+        alarmRequests,
         isDark,
         toggleDark,
         submitMessage,
         approveMessage,
         rejectMessage,
         deleteMessage,
+        submitAlarmRequest,
+        approveAlarmRequest,
+        rejectAlarmRequest,
       }}
     >
       {children}
     </AppContext.Provider>
   );
 }
+
 
 export function useApp() {
   const ctx = useContext(AppContext);

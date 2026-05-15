@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useApp, type MessageStatus } from '../context/AppContext';
 import { APP_ADMIN_NAME, APP_NAME, APP_ORGANIZATION, appTheme, palette } from '../theme';
 import { AppLogo } from './AppLogo';
+import { AdminAlarmPanel } from './AdminAlarmPanel';
+
 
 type FilterTab = 'pending' | 'approved' | 'rejected' | 'all';
 
@@ -210,6 +212,10 @@ export function AdminPage() {
             </span>
           </button>
         ))}
+      </div>
+
+      <div className="mt-6">
+        <AdminAlarmPanel />
       </div>
 
       {activeTab !== 'pending' && (
