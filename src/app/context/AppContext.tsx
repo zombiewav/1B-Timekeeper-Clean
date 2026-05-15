@@ -48,7 +48,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [alarmRequests, setAlarmRequests] = useState<AlarmRequest[]>(INITIAL_ALARM_REQUESTS);
   const [isDark, setIsDark] = useState(false);
 
-
   const toggleDark = () => setIsDark((d) => !d);
 
   const fetchMessages = async () => {
@@ -72,8 +71,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setMessages(mapped);
   };
 
+  const fetchAlarmRequests = async () => {
+    const { data, error } = await supabase
+      .from('alarm_requests')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('fetchAlarmRequests error:', error);
+      return;
+    }
+
+    const mapped: AlarmRequest[] = (data ?? []).map((row: any) => ({
+      id: String(row.id),
+      title: String(row.title ?? ''),
+      reason: String(row.reason ?? ''),
+      alarmTime: String(row.alarmTime ?? row.alarm_time ?? ''),
+      status: row.status as AlarmRequestStatus,
+      timestamp: new Date(row.created_at),
+    }));
+
+    setAlarmRequests(mapped);
+  };
+
   useEffect(() => {
     void fetchMessages();
+    void fetchAlarmRequests();
   }, []);
 
   const submitMessage = (content: string) => {
@@ -138,35 +161,52 @@ export function AppProvider({ children }: { children: ReactNode }) {
     })();
   };
 
-  const submitAlarmRequest = (input: {
+  const submitAlarmRequest = async (input: {
     title: string;
     reason: string;
     alarmTime: string;
   }) => {
-    const id = crypto.randomUUID();
-
-    const next: AlarmRequest = {
-      id,
+    const { error } = await supabase.from('alarm_requests').insert({
       title: input.title,
       reason: input.reason,
       alarmTime: input.alarmTime,
-      status: 'pending' as AlarmRequestStatus,
-      timestamp: new Date(),
-    };
+      status: 'pending',
+    });
 
-    setAlarmRequests((prev) => [next, ...prev]);
+    if (error) {
+      console.error('submitAlarmRequest error:', error);
+      return;
+    }
+
+    await fetchAlarmRequests();
   };
 
-  const approveAlarmRequest = (id: string) => {
-    setAlarmRequests((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: 'approved' } : r)),
-    );
+  const approveAlarmRequest = async (id: string) => {
+    const { error } = await supabase
+      .from('alarm_requests')
+      .update({ status: 'approved' })
+      .eq('id', id);
+
+    if (error) {
+      console.error('approveAlarmRequest error:', error);
+      return;
+    }
+
+    await fetchAlarmRequests();
   };
 
-  const rejectAlarmRequest = (id: string) => {
-    setAlarmRequests((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: 'rejected' } : r)),
-    );
+  const rejectAlarmRequest = async (id: string) => {
+    const { error } = await supabase
+      .from('alarm_requests')
+      .update({ status: 'rejected' })
+      .eq('id', id);
+
+    if (error) {
+      console.error('rejectAlarmRequest error:', error);
+      return;
+    }
+
+    await fetchAlarmRequests();
   };
 
   return (
