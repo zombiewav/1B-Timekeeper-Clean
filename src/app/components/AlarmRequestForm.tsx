@@ -289,4 +289,3 @@ export function AlarmRequestForm() {
     </motion.div>
   );
 }
-
