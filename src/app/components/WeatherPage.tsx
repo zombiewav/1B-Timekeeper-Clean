@@ -5,7 +5,6 @@ import { useApp } from '../context/AppContext';
 import { APP_NAME, APP_ORGANIZATION, appTheme } from '../theme';
 
 type WeatherResponse = {
-  timezone?: string;
   current?: {
     temperature_2m: number;
     apparent_temperature: number;
@@ -18,6 +17,13 @@ type WeatherResponse = {
     temperature_2m_min: number[];
     precipitation_probability_max: number[];
   };
+};
+
+type ReverseGeocodeResponse = {
+  city?: string;
+  locality?: string;
+  principalSubdivision?: string;
+  countryName?: string;
 };
 
 type Coords = {
@@ -56,10 +62,27 @@ const WEATHER_LABELS: Record<number, string> = {
   99: 'Thunderstorm with heavy hail',
 };
 
-function formatTimezoneLabel(timezone?: string) {
-  if (!timezone) return 'Your area';
-  const last = timezone.split('/').pop() ?? timezone;
-  return last.replace(/_/g, ' ');
+function formatCoordsLabel(coords: Coords) {
+  return `${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)}`;
+}
+
+function formatLocationLabel(location: ReverseGeocodeResponse | null, coords: Coords | null) {
+  if (location) {
+    const parts = [location.city ?? location.locality, location.principalSubdivision].filter(Boolean);
+    if (parts.length > 0) {
+      return parts.join(', ');
+    }
+
+    if (location.countryName) {
+      return location.countryName;
+    }
+  }
+
+  if (coords) {
+    return formatCoordsLabel(coords);
+  }
+
+  return 'Your area';
 }
 
 async function fetchWeather(coords: Coords): Promise<WeatherResponse> {
@@ -85,6 +108,24 @@ async function fetchWeather(coords: Coords): Promise<WeatherResponse> {
   const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`);
   if (!response.ok) {
     throw new Error('Unable to load weather right now.');
+  }
+
+  return response.json();
+}
+
+async function fetchLocationLabel(coords: Coords): Promise<ReverseGeocodeResponse | null> {
+  const params = new URLSearchParams({
+    latitude: String(coords.latitude),
+    longitude: String(coords.longitude),
+    localityLanguage: 'en',
+  });
+
+  const response = await fetch(
+    `https://api.bigdatacloud.net/data/reverse-geocode-client?${params.toString()}`,
+  );
+
+  if (!response.ok) {
+    return null;
   }
 
   return response.json();
@@ -118,6 +159,7 @@ export function WeatherPage() {
   const colors = isDark ? appTheme.dark : appTheme.light;
   const [coords, setCoords] = useState<Coords | null>(null);
   const [weather, setWeather] = useState<WeatherResponse | null>(null);
+  const [locationLabel, setLocationLabel] = useState('Waiting for location');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState(0);
@@ -133,15 +175,22 @@ export function WeatherPage() {
         const nextCoords = await getCurrentPosition();
         if (cancelled) return;
         setCoords(nextCoords);
+        setLocationLabel(formatCoordsLabel(nextCoords));
 
-        const result = await fetchWeather(nextCoords);
+        const [weatherResult, locationResult] = await Promise.all([
+          fetchWeather(nextCoords),
+          fetchLocationLabel(nextCoords),
+        ]);
+
         if (cancelled) return;
-        setWeather(result);
+        setWeather(weatherResult);
+        setLocationLabel(formatLocationLabel(locationResult, nextCoords));
       } catch (err) {
         if (cancelled) return;
         const message = err instanceof Error ? err.message : 'Unable to load weather.';
         setError(message);
         setWeather(null);
+        setLocationLabel('Location unavailable');
       } finally {
         if (!cancelled) {
           setLoading(false);
@@ -212,9 +261,7 @@ export function WeatherPage() {
           <div className="flex items-center justify-between gap-3 mb-4">
             <div className="flex items-center gap-2" style={{ color: colors.mutedText }}>
               <MapPin size={15} />
-              <span className="text-sm font-medium">
-                {coords ? formatTimezoneLabel(weather?.timezone) : 'Waiting for location'}
-              </span>
+              <span className="text-sm font-medium">{locationLabel}</span>
             </div>
 
             <button

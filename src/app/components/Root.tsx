@@ -277,12 +277,7 @@ export function Root() {
                   className="mt-4 pt-4 flex items-end justify-between gap-4"
                   style={{ borderTop: `1px solid ${colors.dividerLine}` }}
                 >
-                  <p className="text-[10px] uppercase tracking-widest opacity-55" style={{ color: colors.navText }}>
-                    {APP_NAME} System
-                  </p>
-                  <div className="opacity-75 scale-[0.72] origin-bottom-right -mr-5 -mb-5">
-                    <StopwatchSVG color={colors.iconColor} />
-                  </div>
+                  <div />
                 </div>
               </div>
             </div>
@@ -485,17 +480,6 @@ export function Root() {
         </>
       )}
 
-      <div
-        className={`${isMobile ? 'pb-6 pt-1' : 'fixed bottom-3 left-1/2 -translate-x-1/2 z-20'}`}
-        style={{ pointerEvents: 'none' }}
-      >
-        <p
-          className={`uppercase tracking-widest opacity-30 ${isMobile ? 'text-center text-[9px]' : 'text-[10px]'}`}
-          style={{ color: colors.navText }}
-        >
-          {APP_ORGANIZATION} | {APP_NAME} System
-        </p>
-      </div>
     </div>
   );
 }
