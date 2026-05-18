@@ -1,172 +1,182 @@
- import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { supabase } from '../../lib/supabase';
-import type { AlarmRequest, AlarmRequestStatus } from '../models/alarm';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
+import { supabase } from "../../lib/supabase";
+import type { AlarmRequest, AlarmRequestStatus } from "../models/alarm";
 
-export type MessageStatus = 'pending' | 'approved' | 'rejected';
+export type MessageStatus = "pending" | "approved" | "rejected";
 
 export interface Message {
-
   id: string;
   content: string;
   status: MessageStatus;
   timestamp: Date;
 }
 
-
 interface AppContextType {
   messages: Message[];
-
   alarmRequests: AlarmRequest[];
-
   isDark: boolean;
   toggleDark: () => void;
-
-  submitMessage: (content: string) => void;
+  submitMessage: (content: string) => Promise<void>;
   approveMessage: (id: string) => void;
   rejectMessage: (id: string) => void;
   deleteMessage: (id: string) => void;
-
   submitAlarmRequest: (input: {
     title: string;
     reason: string;
     alarmTime: string;
-  }) => void;
-  approveAlarmRequest: (id: string) => void;
-  rejectAlarmRequest: (id: string) => void;
+  }) => Promise<void>;
+  approveAlarmRequest: (id: string) => Promise<void>;
+  rejectAlarmRequest: (id: string) => Promise<void>;
 }
-
 
 const AppContext = createContext<AppContextType | null>(null);
 
-const INITIAL_MESSAGES: Message[] = [];
-
-const INITIAL_ALARM_REQUESTS: AlarmRequest[] = [];
-
-
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
-  const [alarmRequests, setAlarmRequests] = useState<AlarmRequest[]>(INITIAL_ALARM_REQUESTS);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [alarmRequests, setAlarmRequests] = useState<AlarmRequest[]>([]);
   const [isDark, setIsDark] = useState(false);
-
 
   const toggleDark = () => setIsDark((d) => !d);
 
+  // ── Messages ────────────────────────────────────────────────────────────────
   const fetchMessages = async () => {
     const { data, error } = await supabase
-      .from('messages')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .from("messages")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error('fetchMessages error:', error);
-      return;
-    }
+    if (error) { console.error("fetchMessages error:", error); return; }
 
-    const mapped: Message[] = (data ?? []).map((row: any) => ({
-      id: String(row.id),
-      content: String(row.content ?? ''),
-      status: row.status as MessageStatus,
-      timestamp: new Date(row.created_at),
-    }));
-
-    setMessages(mapped);
+    setMessages(
+      (data ?? []).map((row: any) => ({
+        id: String(row.id),
+        content: String(row.content ?? ""),
+        status: row.status as MessageStatus,
+        timestamp: new Date(row.created_at),
+      })),
+    );
   };
 
-  useEffect(() => {
-    void fetchMessages();
-  }, []);
+  useEffect(() => { void fetchMessages(); }, []);
 
-  const submitMessage = (content: string) => {
-    void (async () => {
-      const { error } = await supabase.from('messages').insert({
-        content,
-        status: 'pending',
-        sender_name: 'Anonymous',
-      });
-
-      if (error) {
-        console.error('submitMessage error:', error);
-        return;
-      }
-
-      await fetchMessages();
-    })();
+  const submitMessage = async (content: string): Promise<void> => {
+    const { error } = await supabase.from("messages").insert({
+      content, status: "pending", sender_name: "Anonymous",
+    });
+    if (error) throw new Error(error.message);
+    await fetchMessages();
   };
 
   const approveMessage = (id: string) => {
     void (async () => {
-      const { error } = await supabase
-        .from('messages')
-        .update({ status: 'approved' })
-        .eq('id', id);
-
-      if (error) {
-        console.error('approveMessage error:', error);
-        return;
-      }
-
+      const { error } = await supabase.from("messages").update({ status: "approved" }).eq("id", id);
+      if (error) { console.error("approveMessage error:", error); return; }
       await fetchMessages();
     })();
   };
 
   const rejectMessage = (id: string) => {
     void (async () => {
-      const { error } = await supabase
-        .from('messages')
-        .update({ status: 'rejected' })
-        .eq('id', id);
-
-      if (error) {
-        console.error('rejectMessage error:', error);
-        return;
-      }
-
+      const { error } = await supabase.from("messages").update({ status: "rejected" }).eq("id", id);
+      if (error) { console.error("rejectMessage error:", error); return; }
       await fetchMessages();
     })();
   };
 
   const deleteMessage = (id: string) => {
     void (async () => {
-      const { error } = await supabase.from('messages').delete().eq('id', id);
-
-      if (error) {
-        console.error('deleteMessage error:', error);
-        return;
-      }
-
+      const { error } = await supabase.from("messages").delete().eq("id", id);
+      if (error) { console.error("deleteMessage error:", error); return; }
       await fetchMessages();
     })();
   };
 
-  const submitAlarmRequest = (input: {
+  // ── Alarms ──────────────────────────────────────────────────────────────────
+  const fetchAlarmRequests = async () => {
+    const { data, error } = await supabase
+      .from("alarms")
+      .select("id, hour, minute, label, approved, created_at")
+      .order("created_at", { ascending: false });
+
+    if (error) { console.error("fetchAlarmRequests error:", error); return; }
+
+    setAlarmRequests(
+      (data ?? []).map((row: any) => {
+        // label is stored as "title || reason" — split on separator
+        const raw     = String(row.label ?? "");
+        const sepIdx  = raw.indexOf(" || ");
+        const title   = sepIdx >= 0 ? raw.slice(0, sepIdx) : raw;
+        const reason  = sepIdx >= 0 ? raw.slice(sepIdx + 4) : "";
+        const hh      = String(row.hour   ?? 0).padStart(2, "0");
+        const mm      = String(row.minute ?? 0).padStart(2, "0");
+
+        return {
+          id:        String(row.id),
+          title,
+          reason,
+          alarmTime: `${hh}:${mm}`,
+          status:    (row.approved ? "approved" : "pending") as AlarmRequestStatus,
+          timestamp: new Date(row.created_at),
+        };
+      }),
+    );
+  };
+
+  useEffect(() => { void fetchAlarmRequests(); }, []);
+
+  const submitAlarmRequest = async (input: {
     title: string;
     reason: string;
     alarmTime: string;
-  }) => {
-    const id = crypto.randomUUID();
+  }): Promise<void> => {
+    const [hourStr, minuteStr] = input.alarmTime.split(":");
+    const hour   = parseInt(hourStr,   10);
+    const minute = parseInt(minuteStr, 10);
 
-    const next: AlarmRequest = {
-      id,
-      title: input.title,
-      reason: input.reason,
-      alarmTime: input.alarmTime,
-      status: 'pending' as AlarmRequestStatus,
-      timestamp: new Date(),
-    };
+    // Combine title + reason into label (device only reads hour/minute, not label)
+    const label = input.reason.trim()
+      ? `${input.title.trim()} || ${input.reason.trim()}`
+      : input.title.trim();
 
-    setAlarmRequests((prev) => [next, ...prev]);
+    const { error } = await supabase
+      .from("alarms")
+      .insert({ hour, minute, label, approved: false });
+
+    if (error) throw new Error(error.message);
+    await fetchAlarmRequests();
   };
 
-  const approveAlarmRequest = (id: string) => {
-    setAlarmRequests((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: 'approved' } : r)),
-    );
+  const approveAlarmRequest = async (id: string): Promise<void> => {
+    const { error } = await supabase
+      .from("alarms")
+      .update({ approved: true })
+      .eq("id", id);
+
+    if (error) { console.error("approveAlarmRequest error:", error); return; }
+    await fetchAlarmRequests();
   };
 
-  const rejectAlarmRequest = (id: string) => {
-    setAlarmRequests((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: 'rejected' } : r)),
-    );
+  const rejectAlarmRequest = async (id: string): Promise<void> => {
+    // Delete rejected alarms — they should never reach the device
+    const { error } = await supabase.from("alarms").delete().eq("id", id);
+
+    if (error) {
+      console.error("rejectAlarmRequest error:", error);
+      // Optimistic local fallback
+      setAlarmRequests((prev) =>
+        prev.map((r) =>
+          r.id === id ? { ...r, status: "rejected" as AlarmRequestStatus } : r,
+        ),
+      );
+      return;
+    }
+    await fetchAlarmRequests();
   };
 
   return (
@@ -190,9 +200,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 }
 
-
 export function useApp() {
   const ctx = useContext(AppContext);
-  if (!ctx) throw new Error('useApp must be used within AppProvider');
+  if (!ctx) throw new Error("useApp must be used within AppProvider");
   return ctx;
 }
