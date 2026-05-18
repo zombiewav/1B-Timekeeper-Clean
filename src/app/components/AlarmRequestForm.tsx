@@ -39,11 +39,8 @@ export function AlarmRequestForm() {
     setError(null);
     setSubmitState('sending');
 
-    await new Promise((resolve) => setTimeout(resolve, 1100));
-
     try {
-      // local mock flow: always create pending request
-      submitAlarmRequest({
+      await submitAlarmRequest({
         title: title.trim(),
         reason: reason.trim(),
         alarmTime,
@@ -55,7 +52,6 @@ export function AlarmRequestForm() {
         setTitle('');
         setReason('');
         setAlarmTime('');
-
       }, 2400);
     } catch (err: any) {
       setError(err?.message ?? 'Failed to submit alarm request.');

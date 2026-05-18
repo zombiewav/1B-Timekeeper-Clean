@@ -28,16 +28,14 @@ export function StudentPage() {
     if (!canSubmit) return;
 
     setSubmitState('sending');
-    await new Promise((resolve) => setTimeout(resolve, 1400));
-
-    if (Math.random() > 0.05) {
-      submitMessage(message);
+    try {
+      await submitMessage(message);
       setSubmitState('success');
       setTimeout(() => {
         setSubmitState('idle');
         setMessage('');
       }, 2600);
-    } else {
+    } catch {
       setSubmitState('error');
       setTimeout(() => setSubmitState('idle'), 2600);
     }
