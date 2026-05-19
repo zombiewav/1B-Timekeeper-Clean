@@ -1,4 +1,4 @@
-export type AlarmRequestStatus = 'pending' | 'approved' | 'rejected';
+export type AlarmRequestStatus = "pending" | "approved" | "rejected";
 
 export interface AlarmRequest {
   id: string;
@@ -9,4 +9,3 @@ export interface AlarmRequest {
   status: AlarmRequestStatus;
   timestamp: Date;
 }
-

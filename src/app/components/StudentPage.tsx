@@ -16,6 +16,7 @@ export function StudentPage() {
   const colors = isDark ? appTheme.dark : appTheme.light;
   const [message, setMessage] = useState('');
   const [submitState, setSubmitState] = useState<SubmitState>('idle');
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const charsUsed = message.length;
   const charsLeft = MAX_CHARS - charsUsed;
@@ -27,6 +28,7 @@ export function StudentPage() {
     e.preventDefault();
     if (!canSubmit) return;
 
+    setErrorMsg(null);
     setSubmitState('sending');
     try {
       await submitMessage(message);
@@ -35,9 +37,14 @@ export function StudentPage() {
         setSubmitState('idle');
         setMessage('');
       }, 2600);
-    } catch {
+    } catch (err: any) {
+      console.error("submitMessage failed:", err);
+      setErrorMsg(err?.message ?? 'Failed to send message.');
       setSubmitState('error');
-      setTimeout(() => setSubmitState('idle'), 2600);
+      setTimeout(() => {
+        setSubmitState('idle');
+        setErrorMsg(null);
+      }, 5000);
     }
   };
 
@@ -213,11 +220,13 @@ export function StudentPage() {
                 className="w-full flex flex-col items-center gap-1.5"
               >
                 <div
-                  className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl font-semibold text-white"
+                  className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl font-semibold text-white text-xs px-4"
                   style={{ backgroundColor: palette.rejected }}
                 >
-                  <AlertCircle size={16} />
-                  Failed to send. Try again.
+                  <AlertCircle size={16} className="flex-shrink-0" />
+                  <span className="text-center font-semibold leading-tight">
+                    {errorMsg || 'Failed to send. Try again.'}
+                  </span>
                 </div>
               </motion.div>
             )}
