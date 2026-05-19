@@ -17,6 +17,14 @@ export interface Message {
   timestamp: Date;
 }
 
+function toMessageStatus(row: any): MessageStatus {
+  if (row.status === "approved" || row.status === "rejected" || row.status === "pending") {
+    return row.status;
+  }
+
+  return row.approved ? "approved" : "pending";
+}
+
 interface AppContextType {
   messages: Message[];
   alarmRequests: AlarmRequest[];
@@ -60,7 +68,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       (data ?? []).map((row: any) => ({
         id: String(row.id),
         content: String(row.content ?? ""),
-        status: row.status as MessageStatus,
+        status: toMessageStatus(row),
         timestamp: new Date(row.created_at),
       })),
     );
@@ -109,6 +117,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const submitMessage = async (content: string): Promise<void> => {
     const { error } = await supabase.from("messages").insert({
       content,
+      approved: false,
       status: "pending",
       sender_name: "Anonymous",
     });
@@ -121,7 +130,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     void (async () => {
       const { error } = await supabase
         .from("messages")
-        .update({ status: "approved" })
+        .update({ status: "approved", approved: true })
         .eq("id", id);
 
       if (error) {
@@ -137,7 +146,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     void (async () => {
       const { error } = await supabase
         .from("messages")
-        .update({ status: "rejected" })
+        .update({ status: "rejected", approved: false })
         .eq("id", id);
 
       if (error) {
