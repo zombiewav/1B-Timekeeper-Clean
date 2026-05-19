@@ -117,7 +117,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const submitMessage = async (content: string): Promise<void> => {
     const { error } = await supabase.from("messages").insert({
       content,
-      approved: false,
       status: "pending",
       sender_name: "Anonymous",
     });
@@ -130,7 +129,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     void (async () => {
       const { error } = await supabase
         .from("messages")
-        .update({ status: "approved", approved: true })
+        .update({ status: "approved" })
         .eq("id", id);
 
       if (error) {
@@ -146,7 +145,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     void (async () => {
       const { error } = await supabase
         .from("messages")
-        .update({ status: "rejected", approved: false })
+        .update({ status: "rejected" })
         .eq("id", id);
 
       if (error) {
